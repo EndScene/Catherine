@@ -56,11 +56,6 @@ class boss_maiden_of_grief : public CreatureScript
 public:
     boss_maiden_of_grief() : CreatureScript("boss_maiden_of_grief") { }
 
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new boss_maiden_of_griefAI (creature);
-    }
-
     struct boss_maiden_of_griefAI : public ScriptedAI
     {
         boss_maiden_of_griefAI(Creature* creature) : ScriptedAI(creature)
@@ -75,7 +70,7 @@ public:
         uint32 ShockOfSorrowTimer;
         uint32 PillarOfWoeTimer;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             PartingSorrowTimer = urand(25000, 30000);
             StormOfGriefTimer = 10000;
@@ -84,30 +79,23 @@ public:
 
             if (instance)
             {
-                instance->SetData(DATA_MAIDEN_OF_GRIEF_EVENT, NOT_STARTED);
+                instance->SetBossState(DATA_MAIDEN_OF_GRIEF, NOT_STARTED);
                 instance->DoStopTimedAchievement(ACHIEVEMENT_TIMED_TYPE_EVENT, ACHIEV_GOOD_GRIEF_START_EVENT);
             }
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         {
             Talk(SAY_AGGRO);
 
             if (instance)
             {
-                if (GameObject* pDoor = instance->instance->GetGameObject(instance->GetData64(DATA_MAIDEN_DOOR)))
-                    if (pDoor->GetGoState() == GO_STATE_READY)
-                    {
-                        EnterEvadeMode();
-                        return;
-                    }
-
-                instance->SetData(DATA_MAIDEN_OF_GRIEF_EVENT, IN_PROGRESS);
+                instance->SetBossState(DATA_MAIDEN_OF_GRIEF, IN_PROGRESS);
                 instance->DoStartTimedAchievement(ACHIEVEMENT_TIMED_TYPE_EVENT, ACHIEV_GOOD_GRIEF_START_EVENT);
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             //Return since we have no target
             if (!UpdateVictim())
@@ -153,15 +141,15 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void JustDied(Unit* /*killer*/)
+        void JustDied(Unit* /*killer*/) OVERRIDE
         {
             Talk(SAY_DEATH);
 
             if (instance)
-                instance->SetData(DATA_MAIDEN_OF_GRIEF_EVENT, DONE);
+                instance->SetBossState(DATA_MAIDEN_OF_GRIEF, DONE);
         }
 
-        void KilledUnit(Unit* victim)
+        void KilledUnit(Unit* victim) OVERRIDE
         {
             if (victim->GetTypeId() != TYPEID_PLAYER)
                 return;
@@ -170,6 +158,10 @@ public:
         }
     };
 
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    {
+        return GetHallsOfStoneAI<boss_maiden_of_griefAI>(creature);
+    }
 };
 
 void AddSC_boss_maiden_of_grief()

@@ -41,33 +41,33 @@ public:
     {
         static ChatCommand gobjectAddCommandTable[] =
         {
-            { "temp",           SEC_GAMEMASTER,     false, &HandleGameObjectAddTempCommand,   "", NULL },
-            { "",               SEC_GAMEMASTER,     false, &HandleGameObjectAddCommand,       "", NULL },
-            { NULL,             0,                  false, NULL,                              "", NULL }
+            { "temp", rbac::RBAC_PERM_COMMAND_GOBJECT_ADD_TEMP, false, &HandleGameObjectAddTempCommand,   "", NULL },
+            { "",     rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,      false, &HandleGameObjectAddCommand,       "", NULL },
+            { NULL,   0,                                  false, NULL,                              "", NULL }
         };
         static ChatCommand gobjectSetCommandTable[] =
         {
-            { "phase",          SEC_GAMEMASTER,     false, &HandleGameObjectSetPhaseCommand,  "", NULL },
-            { "state",          SEC_GAMEMASTER,     false, &HandleGameObjectSetStateCommand,  "", NULL },
-            { NULL,             0,                  false, NULL,                              "", NULL }
+            { "phase", rbac::RBAC_PERM_COMMAND_GOBJECT_SET_PHASE, false, &HandleGameObjectSetPhaseCommand,  "", NULL },
+            { "state", rbac::RBAC_PERM_COMMAND_GOBJECT_SET_STATE, false, &HandleGameObjectSetStateCommand,  "", NULL },
+            { NULL,    0,                                   false, NULL,                              "", NULL }
         };
         static ChatCommand gobjectCommandTable[] =
         {
-            { "activate",       SEC_GAMEMASTER,     false, &HandleGameObjectActivateCommand,  "", NULL },
-            { "delete",         SEC_GAMEMASTER,     false, &HandleGameObjectDeleteCommand,    "", NULL },
-            { "info",           SEC_GAMEMASTER,     false, &HandleGameObjectInfoCommand,      "", NULL },
-            { "move",           SEC_GAMEMASTER,     false, &HandleGameObjectMoveCommand,      "", NULL },
-            { "near",           SEC_GAMEMASTER,     false, &HandleGameObjectNearCommand,      "", NULL },
-            { "target",         SEC_GAMEMASTER,     false, &HandleGameObjectTargetCommand,    "", NULL },
-            { "turn",           SEC_GAMEMASTER,     false, &HandleGameObjectTurnCommand,      "", NULL },
-            { "add",            SEC_GAMEMASTER,     false, NULL,            "", gobjectAddCommandTable },
-            { "set",            SEC_GAMEMASTER,     false, NULL,            "", gobjectSetCommandTable },
-            { NULL,             0,                  false, NULL,                              "", NULL }
+            { "activate", rbac::RBAC_PERM_COMMAND_GOBJECT_ACTIVATE, false, &HandleGameObjectActivateCommand,  "", NULL },
+            { "delete",   rbac::RBAC_PERM_COMMAND_GOBJECT_DELETE,   false, &HandleGameObjectDeleteCommand,    "", NULL },
+            { "info",     rbac::RBAC_PERM_COMMAND_GOBJECT_INFO,     false, &HandleGameObjectInfoCommand,      "", NULL },
+            { "move",     rbac::RBAC_PERM_COMMAND_GOBJECT_MOVE,     false, &HandleGameObjectMoveCommand,      "", NULL },
+            { "near",     rbac::RBAC_PERM_COMMAND_GOBJECT_NEAR,     false, &HandleGameObjectNearCommand,      "", NULL },
+            { "target",   rbac::RBAC_PERM_COMMAND_GOBJECT_TARGET,   false, &HandleGameObjectTargetCommand,    "", NULL },
+            { "turn",     rbac::RBAC_PERM_COMMAND_GOBJECT_TURN,     false, &HandleGameObjectTurnCommand,      "", NULL },
+            { "add",      rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,      false, NULL,            "", gobjectAddCommandTable },
+            { "set",      rbac::RBAC_PERM_COMMAND_GOBJECT_SET,      false, NULL,            "", gobjectSetCommandTable },
+            { NULL,       0,                                  false, NULL,                              "", NULL }
         };
         static ChatCommand commandTable[] =
         {
-            { "gobject",        SEC_GAMEMASTER,     false, NULL,                "", gobjectCommandTable },
-            { NULL,             0,                  false, NULL,                               "", NULL }
+            { "gobject", rbac::RBAC_PERM_COMMAND_GOBJECT, false, NULL, "", gobjectCommandTable },
+            { NULL,      0,                         false, NULL, "", NULL }
         };
         return commandTable;
     }
@@ -136,7 +136,7 @@ public:
         if (objectInfo->displayId && !sGameObjectDisplayInfoStore.LookupEntry(objectInfo->displayId))
         {
             // report to DB errors log as in loading case
-            TC_LOG_ERROR(LOG_FILTER_SQL, "Gameobject (Entry %u GoType: %u) have invalid displayId (%u), not spawned.", objectId, objectInfo->type, objectInfo->displayId);
+            TC_LOG_ERROR("sql.sql", "Gameobject (Entry %u GoType: %u) have invalid displayId (%u), not spawned.", objectId, objectInfo->type, objectInfo->displayId);
             handler->PSendSysMessage(LANG_GAMEOBJECT_HAVE_INVALID_DATA, objectId);
             handler->SetSentErrorMessage(true);
             return false;
@@ -279,8 +279,8 @@ public:
 
         bool found = false;
         float x, y, z, o;
-        uint32 guidLow, id;
-        uint16 mapId, phase;
+        uint32 guidLow, id, phase;
+        uint16 mapId;
         uint32 poolId;
 
         do
@@ -293,7 +293,7 @@ public:
             z =       fields[4].GetFloat();
             o =       fields[5].GetFloat();
             mapId =   fields[6].GetUInt16();
-            phase =   fields[7].GetUInt16();
+            phase =   fields[7].GetUInt32();
             poolId =  sPoolMgr->IsPartOfAPool<GameObject>(guidLow);
             if (!poolId || sPoolMgr->IsSpawnedObject<GameObject>(guidLow))
                 found = true;

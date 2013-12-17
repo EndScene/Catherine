@@ -73,7 +73,7 @@ public:
 
     struct npc_aged_dying_ancient_kodoAI : public ScriptedAI
     {
-        npc_aged_dying_ancient_kodoAI(Creature* creature) : ScriptedAI(creature) {}
+        npc_aged_dying_ancient_kodoAI(Creature* creature) : ScriptedAI(creature) { }
 
         void MoveInLineOfSight(Unit* who)
         {
@@ -108,7 +108,7 @@ public:
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_aged_dying_ancient_kodoAI(creature);
     }

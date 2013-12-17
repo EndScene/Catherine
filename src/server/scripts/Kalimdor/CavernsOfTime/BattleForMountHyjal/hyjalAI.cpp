@@ -407,7 +407,7 @@ void hyjalAI::Reset()
             instance->DoUpdateWorldState(WORLD_STATE_ENEMYCOUNT, 0);
             instance->SetData(DATA_RESET_TRASH_COUNT, 0);
         }
-    } else TC_LOG_ERROR(LOG_FILTER_TSCR, ERROR_INST_DATA);
+    } else TC_LOG_ERROR("scripts", ERROR_INST_DATA);
 
     //Visibility
     DoHide = true;
@@ -540,7 +540,7 @@ void hyjalAI::SummonNextWave(const Wave wave[18], uint32 Count, float Base[4][3]
 
     if (!instance)
     {
-        TC_LOG_ERROR(LOG_FILTER_TSCR, ERROR_INST_DATA);
+        TC_LOG_ERROR("scripts", ERROR_INST_DATA);
         return;
     }
     InfernalCount = 0;//reset infernal count every new wave
@@ -570,7 +570,7 @@ void hyjalAI::SummonNextWave(const Wave wave[18], uint32 Count, float Base[4][3]
         else
         {
             NextWaveTimer = 15000;
-            TC_LOG_DEBUG(LOG_FILTER_TSCR, "HyjalAI: debug mode is enabled. Next Wave in 15 seconds");
+            TC_LOG_DEBUG("scripts", "HyjalAI: debug mode is enabled. Next Wave in 15 seconds");
         }
     }
     else
@@ -614,7 +614,7 @@ uint32 hyjalAI::GetInstanceData(uint32 Event)
 {
     if (instance)
         return instance->GetData(Event);
-    else TC_LOG_ERROR(LOG_FILTER_TSCR, ERROR_INST_DATA);
+    else TC_LOG_ERROR("scripts", ERROR_INST_DATA);
 
     return 0;
 }
@@ -661,7 +661,7 @@ void hyjalAI::SpawnVeins()
             return;
         for (uint8 i = 0; i<7; ++i)
         {
-            GameObject* gem = me->SummonGameObject(ANCIENT_VEIN, VeinPos[i][0], VeinPos[i][1], VeinPos[i][2], VeinPos[i][3], VeinPos[i][4], VeinPos[i][5], VeinPos[i][6], VeinPos[i][7], 0);
+            GameObject* gem = me->SummonGameObject(GO_ANCIENT_VEIN, VeinPos[i][0], VeinPos[i][1], VeinPos[i][2], VeinPos[i][3], VeinPos[i][4], VeinPos[i][5], VeinPos[i][6], VeinPos[i][7], 0);
             if (gem)
                 VeinGUID[i]=gem->GetGUID();
         }
@@ -671,7 +671,7 @@ void hyjalAI::SpawnVeins()
             return;
         for (uint8 i = 7; i<14; ++i)
         {
-            GameObject* gem = me->SummonGameObject(ANCIENT_VEIN, VeinPos[i][0], VeinPos[i][1], VeinPos[i][2], VeinPos[i][3], VeinPos[i][4], VeinPos[i][5], VeinPos[i][6], VeinPos[i][7], 0);
+            GameObject* gem = me->SummonGameObject(GO_ANCIENT_VEIN, VeinPos[i][0], VeinPos[i][1], VeinPos[i][2], VeinPos[i][3], VeinPos[i][4], VeinPos[i][5], VeinPos[i][6], VeinPos[i][7], 0);
             if (gem)
                 VeinGUID[i]=gem->GetGUID();
         }
@@ -731,7 +731,7 @@ void hyjalAI::UpdateAI(uint32 diff)
                     HideNearPos(me->GetPositionX(), me->GetPositionY());
                     HideNearPos(5037.76f, -1889.71f);
                     for (uint8 i = 0; i < 92; ++i)//summon fires
-                        me->SummonGameObject(FLAMEOBJECT, AllianceFirePos[i][0], AllianceFirePos[i][1], AllianceFirePos[i][2], AllianceFirePos[i][3], AllianceFirePos[i][4], AllianceFirePos[i][5], AllianceFirePos[i][6], AllianceFirePos[i][7], 0);
+                        me->SummonGameObject(GO_ROARING_FLAME, AllianceFirePos[i][0], AllianceFirePos[i][1], AllianceFirePos[i][2], AllianceFirePos[i][3], AllianceFirePos[i][4], AllianceFirePos[i][5], AllianceFirePos[i][6], AllianceFirePos[i][7], 0);
 
                 }
                 else me->SetVisible(true);
@@ -744,7 +744,7 @@ void hyjalAI::UpdateAI(uint32 diff)
                     HideNearPos(5563, -2763.19f);
                     HideNearPos(5542.2f, -2629.36f);
                     for (uint8 i = 0; i < 65; ++i)//summon fires
-                        me->SummonGameObject(FLAMEOBJECT, HordeFirePos[i][0], HordeFirePos[i][1], HordeFirePos[i][2], HordeFirePos[i][3], HordeFirePos[i][4], HordeFirePos[i][5], HordeFirePos[i][6], HordeFirePos[i][7], 0);
+                        me->SummonGameObject(GO_ROARING_FLAME, HordeFirePos[i][0], HordeFirePos[i][1], HordeFirePos[i][2], HordeFirePos[i][3], HordeFirePos[i][4], HordeFirePos[i][5], HordeFirePos[i][6], HordeFirePos[i][7], 0);
 
                 }
                 else me->SetVisible(true);
@@ -1051,7 +1051,7 @@ void hyjalAI::DoOverrun(uint32 faction, const uint32 diff)
     {
         case 0://alliance
             for (uint8 i = 0; i < 92; ++i)//summon fires
-                me->SummonGameObject(FLAMEOBJECT, AllianceFirePos[i][0], AllianceFirePos[i][1], AllianceFirePos[i][2], AllianceFirePos[i][3], AllianceFirePos[i][4], AllianceFirePos[i][5], AllianceFirePos[i][6], AllianceFirePos[i][7], 0);
+                me->SummonGameObject(GO_ROARING_FLAME, AllianceFirePos[i][0], AllianceFirePos[i][1], AllianceFirePos[i][2], AllianceFirePos[i][3], AllianceFirePos[i][4], AllianceFirePos[i][5], AllianceFirePos[i][6], AllianceFirePos[i][7], 0);
 
             for (uint8 i = 0; i < 25; ++i)//summon 25 ghouls
             {
@@ -1092,7 +1092,7 @@ void hyjalAI::DoOverrun(uint32 faction, const uint32 diff)
             break;
         case 1://horde
             for (uint8 i = 0; i < 65; ++i)//summon fires
-                me->SummonGameObject(FLAMEOBJECT, HordeFirePos[i][0], HordeFirePos[i][1], HordeFirePos[i][2], HordeFirePos[i][3], HordeFirePos[i][4], HordeFirePos[i][5], HordeFirePos[i][6], HordeFirePos[i][7], 0);
+                me->SummonGameObject(GO_ROARING_FLAME, HordeFirePos[i][0], HordeFirePos[i][1], HordeFirePos[i][2], HordeFirePos[i][3], HordeFirePos[i][4], HordeFirePos[i][5], HordeFirePos[i][6], HordeFirePos[i][7], 0);
 
             for (uint8 i = 0; i < 26; ++i)//summon infernals
             {

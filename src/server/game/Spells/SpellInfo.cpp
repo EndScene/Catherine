@@ -883,8 +883,10 @@ SpellInfo::SpellInfo(SpellEntry const* spellEntry, SpellEffectEntry const** effe
     PowerType = spellEntry->powerType;
     RangeEntry = spellEntry->rangeIndex ? sSpellRangeStore.LookupEntry(spellEntry->rangeIndex) : NULL;
     Speed = spellEntry->speed;
+
     for (uint8 i = 0; i < 2; ++i)
         SpellVisual[i] = spellEntry->SpellVisual[i];
+
     SpellIconID = spellEntry->SpellIconID;
     ActiveIconID = spellEntry->activeIconID;
     SpellName = spellEntry->SpellName;
@@ -947,7 +949,7 @@ SpellInfo::SpellInfo(SpellEntry const* spellEntry, SpellEffectEntry const** effe
 
     // SpellCategoriesEntry
     SpellCategoriesEntry const* _categorie = GetSpellCategories();
-    Category = _categorie ? _categorie->Category : 0;
+    CategoryEntry = _categorie ? sSpellCategoryStore.LookupEntry(_categorie->Category) : NULL;
     Dispel = _categorie ? _categorie->Dispel : 0;
     Mechanic = _categorie ? _categorie->Mechanic : 0;
     StartRecoveryCategory = _categorie ? _categorie->StartRecoveryCategory : 0;
@@ -1015,13 +1017,17 @@ SpellInfo::SpellInfo(SpellEntry const* spellEntry, SpellEffectEntry const** effe
     for (uint8 i = 0; i < 2; ++i)
         Totem[i] = _totem ? _totem->Totem[i] : 0;
 
-    ExplicitTargetMask = _GetExplicitTargetMask();
     ChainEntry = NULL;
 }
 
 SpellInfo::~SpellInfo()
 {
     _UnloadImplicitTargetConditionLists();
+}
+
+uint32 SpellInfo::GetCategory() const
+{
+    return CategoryEntry ? CategoryEntry->Id : 0;
 }
 
 bool SpellInfo::HasEffect(SpellEffects effect) const
@@ -1169,10 +1175,12 @@ bool SpellInfo::NeedsExplicitUnitTarget() const
     return GetExplicitTargetMask() & TARGET_FLAG_UNIT_MASK;
 }
 
-bool SpellInfo::NeedsToBeTriggeredByCaster() const
+bool SpellInfo::NeedsToBeTriggeredByCaster(SpellInfo const* triggeringSpell) const
 {
     if (NeedsExplicitUnitTarget())
         return true;
+
+    /*
     for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
     {
         if (Effects[i].IsEffect())
@@ -1182,6 +1190,24 @@ bool SpellInfo::NeedsToBeTriggeredByCaster() const
                 return true;
         }
     }
+    */
+
+    if (triggeringSpell->IsChanneled())
+    {
+        uint32 mask = 0;
+        for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+        {
+            if (Effects[i].TargetA.GetTarget() != TARGET_UNIT_CASTER && Effects[i].TargetA.GetTarget() != TARGET_DEST_CASTER
+                && Effects[i].TargetB.GetTarget() != TARGET_UNIT_CASTER && Effects[i].TargetB.GetTarget() != TARGET_DEST_CASTER)
+            {
+                mask |= Effects[i].GetProvidedTargetMask();
+            }
+        }
+
+        if (mask & TARGET_FLAG_UNIT_MASK)
+            return true;
+    }
+
     return false;
 }
 
@@ -1246,6 +1272,11 @@ bool SpellInfo::IsStackableOnOneSlotWithDifferentCasters() const
 {
     /// TODO: Re-verify meaning of SPELL_ATTR3_STACK_FOR_DIFF_CASTERS and update conditions here
     return StackAmount > 1 && !IsChanneled() && !(AttributesEx3 & SPELL_ATTR3_STACK_FOR_DIFF_CASTERS);
+}
+
+bool SpellInfo::IsCooldownStartedOnEvent() const
+{
+    return Attributes & SPELL_ATTR0_DISABLED_WHILE_ACTIVE || (CategoryEntry && CategoryEntry->Flags & SPELL_CATEGORY_FLAG_COOLDOWN_STARTS_ON_EVENT);
 }
 
 bool SpellInfo::IsDeathPersistent() const
@@ -1460,7 +1491,7 @@ SpellCastResult SpellInfo::CheckShapeshift(uint32 form) const
         shapeInfo = sSpellShapeshiftFormStore.LookupEntry(form);
         if (!shapeInfo)
         {
-            TC_LOG_ERROR(LOG_FILTER_SPELLS_AURAS, "GetErrorAtShapeshiftedCast: unknown shapeshift %u", form);
+            TC_LOG_ERROR("spells", "GetErrorAtShapeshiftedCast: unknown shapeshift %u", form);
             return SPELL_CAST_OK;
         }
         actAsShifted = !(shapeInfo->flags1 & 1);            // shapeshift acts as normal form for spells
@@ -1868,7 +1899,7 @@ SpellCastResult SpellInfo::CheckVehicle(Unit const* caster) const
 bool SpellInfo::CheckTargetCreatureType(Unit const* target) const
 {
     // Curse of Doom & Exorcism: not find another way to fix spell target check :/
-    if (SpellFamilyName == SPELLFAMILY_WARLOCK && Category == 1179)
+    if (SpellFamilyName == SPELLFAMILY_WARLOCK && GetCategory() == 1179)
     {
         // not allow cast at player
         if (target->GetTypeId() == TYPEID_PLAYER)
@@ -1890,7 +1921,7 @@ uint32 SpellInfo::GetAllEffectsMechanicMask() const
     uint32 mask = 0;
     if (Mechanic)
         mask |= 1 << Mechanic;
-    for (int i = 0; i < MAX_SPELL_EFFECTS; ++i)
+    for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
         if (Effects[i].IsEffect() && Effects[i].Mechanic)
             mask |= 1 << Effects[i].Mechanic;
     return mask;
@@ -1900,9 +1931,9 @@ uint32 SpellInfo::GetEffectMechanicMask(uint8 effIndex) const
 {
     uint32 mask = 0;
     if (Mechanic)
-        mask |= 1<< Mechanic;
+        mask |= 1 << Mechanic;
     if (Effects[effIndex].IsEffect() && Effects[effIndex].Mechanic)
-        mask |= 1<< Effects[effIndex].Mechanic;
+        mask |= 1 << Effects[effIndex].Mechanic;
     return mask;
 }
 
@@ -1910,10 +1941,10 @@ uint32 SpellInfo::GetSpellMechanicMaskByEffectMask(uint32 effectMask) const
 {
     uint32 mask = 0;
     if (Mechanic)
-        mask |= 1<< Mechanic;
-    for (int i = 0; i < MAX_SPELL_EFFECTS; ++i)
+        mask |= 1 << Mechanic;
+    for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
         if ((effectMask & (1 << i)) && Effects[i].Mechanic)
-            mask |= 1<< Effects[i].Mechanic;
+            mask |= 1 << Effects[i].Mechanic;
     return mask;
 }
 
@@ -1972,7 +2003,7 @@ AuraStateType SpellInfo::GetAuraState() const
         return AURA_STATE_FAERIE_FIRE;
 
     // Sting (hunter's pet ability)
-    if (Category == 1133)
+    if (GetCategory() == 1133)
         return AURA_STATE_FAERIE_FIRE;
 
     // Victorious
@@ -2232,16 +2263,18 @@ int32 SpellInfo::GetMaxDuration() const
     return (DurationEntry->Duration[2] == -1) ? -1 : abs(DurationEntry->Duration[2]);
 }
 
-uint32 SpellInfo::CalcCastTime(Unit* caster, Spell* spell) const
+uint32 SpellInfo::CalcCastTime(uint8 level, Spell* spell /*= NULL*/) const
 {
     int32 castTime = 0;
+    if (!level && spell)
+        level = spell->GetCaster()->getLevel();
 
     // not all spells have cast time index and this is all is pasiive abilities
-    if (caster && CastTimeMax > 0)
+    if (level && CastTimeMax > 0)
     {
         castTime = CastTimeMax;
-        if (CastTimeMaxLevel > int32(caster->getLevel()))
-            castTime = CastTimeMin + int32(caster->getLevel() - 1) * (CastTimeMax - CastTimeMin) / (CastTimeMaxLevel - 1);
+        if (CastTimeMaxLevel > level)
+            castTime = CastTimeMin + int32(level - 1) * (CastTimeMax - CastTimeMin) / (CastTimeMaxLevel - 1);
     }
     else if (CastTimeEntry)
         castTime = CastTimeEntry->CastTime;
@@ -2249,10 +2282,10 @@ uint32 SpellInfo::CalcCastTime(Unit* caster, Spell* spell) const
     if (!castTime)
         return 0;
 
-    if (caster)
-        caster->ModSpellCastTime(this, castTime, spell);
+    if (spell)
+        spell->GetCaster()->ModSpellCastTime(this, castTime, spell);
 
-    if (Attributes & SPELL_ATTR0_REQ_AMMO && (!IsAutoRepeatRangedSpell()))
+    if (Attributes & SPELL_ATTR0_REQ_AMMO && (!IsAutoRepeatRangedSpell()) && !(AttributesEx9 & SPELL_ATTR9_AIMED_SHOT))
         castTime += 500;
 
     return (castTime > 0) ? uint32(castTime) : 0;
@@ -2301,7 +2334,7 @@ int32 SpellInfo::CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask) c
         // Else drain all power
         if (PowerType < MAX_POWERS)
             return caster->GetPower(Powers(PowerType));
-        TC_LOG_ERROR(LOG_FILTER_SPELLS_AURAS, "SpellInfo::CalcPowerCost: Unknown power type '%d' in spell %d", PowerType, Id);
+        TC_LOG_ERROR("spells", "SpellInfo::CalcPowerCost: Unknown power type '%d' in spell %d", PowerType, Id);
         return 0;
     }
 
@@ -2326,10 +2359,10 @@ int32 SpellInfo::CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask) c
                 break;
             case POWER_RUNES:
             case POWER_RUNIC_POWER:
-                TC_LOG_DEBUG(LOG_FILTER_SPELLS_AURAS, "CalculateManaCost: Not implemented yet!");
+                TC_LOG_DEBUG("spells", "CalculateManaCost: Not implemented yet!");
                 break;
             default:
-                TC_LOG_ERROR(LOG_FILTER_SPELLS_AURAS, "CalculateManaCost: Unknown power type '%d' in spell %d", PowerType, Id);
+                TC_LOG_ERROR("spells", "CalculateManaCost: Unknown power type '%d' in spell %d", PowerType, Id);
                 return 0;
         }
     }
@@ -2484,15 +2517,14 @@ bool SpellInfo::IsDifferentRankOf(SpellInfo const* spellInfo) const
 bool SpellInfo::IsHighRankOf(SpellInfo const* spellInfo) const
 {
     if (ChainEntry && spellInfo->ChainEntry)
-    {
         if (ChainEntry->first == spellInfo->ChainEntry->first)
             if (ChainEntry->rank > spellInfo->ChainEntry->rank)
                 return true;
-    }
+
     return false;
 }
 
-uint32 SpellInfo::_GetExplicitTargetMask() const
+void SpellInfo::_InitializeExplicitTargetMask()
 {
     bool srcSet = false;
     bool dstSet = false;
@@ -2502,6 +2534,7 @@ uint32 SpellInfo::_GetExplicitTargetMask() const
     {
         if (!Effects[i].IsEffect())
             continue;
+
         targetMask |= Effects[i].TargetA.GetExplicitTargetMask(srcSet, dstSet);
         targetMask |= Effects[i].TargetB.GetExplicitTargetMask(srcSet, dstSet);
 
@@ -2515,9 +2548,11 @@ uint32 SpellInfo::_GetExplicitTargetMask() const
         // don't add explicit object/dest flags when spell has no max range
         if (GetMaxRange(true) == 0.0f && GetMaxRange(false) == 0.0f)
             effectTargetMask &= ~(TARGET_FLAG_UNIT_MASK | TARGET_FLAG_GAMEOBJECT | TARGET_FLAG_CORPSE_MASK | TARGET_FLAG_DEST_LOCATION);
+
         targetMask |= effectTargetMask;
     }
-    return targetMask;
+
+    ExplicitTargetMask = targetMask;
 }
 
 bool SpellInfo::_IsPositiveEffect(uint8 effIndex, bool deep) const
@@ -2534,8 +2569,6 @@ bool SpellInfo::_IsPositiveEffect(uint8 effIndex, bool deep) const
                 case 29214: // Wrath of the Plaguebringer
                 case 34700: // Allergic Reaction
                 case 54836: // Wrath of the Plaguebringer
-                case 61987: // Avenging Wrath Marker
-                case 61988: // Divine Shield exclude aura
                     return false;
                 case 30877: // Tag Murloc
                 case 61716: // Rabbit Costume
@@ -2547,9 +2580,6 @@ bool SpellInfo::_IsPositiveEffect(uint8 effIndex, bool deep) const
             }
             break;
         case SPELLFAMILY_MAGE:
-            // Amplify Magic, Dampen Magic
-            if (SpellFamilyFlags[0] == 0x00002000)
-                return true;
             // Ignite
             if (SpellIconID == 45)
                 return true;
@@ -2565,23 +2595,11 @@ bool SpellInfo::_IsPositiveEffect(uint8 effIndex, bool deep) const
                     break;
             }
             break;
-        case SPELLFAMILY_HUNTER:
-            // Aspect of the Viper
-            if (Id == 34074)
-                return true;
-            break;
-        case SPELLFAMILY_SHAMAN:
-            if (Id == 30708)
-                return false;
-            break;
         case SPELLFAMILY_ROGUE:
             switch (Id)
             {
                 // Envenom must be considered as a positive effect even though it deals damage
-                case 32645:     // Envenom (Rank 1)
-                case 32684:     // Envenom (Rank 2)
-                case 57992:     // Envenom (Rank 3)
-                case 57993:     // Envenom (Rank 4)
+                case 32645: // Envenom
                     return true;
                 default:
                     break;

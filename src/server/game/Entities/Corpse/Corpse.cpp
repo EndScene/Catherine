@@ -41,9 +41,7 @@ Corpse::Corpse(CorpseType type) : WorldObject(type != CORPSE_BONES), m_type(type
     lootRecipient = NULL;
 }
 
-Corpse::~Corpse()
-{
-}
+Corpse::~Corpse() { }
 
 void Corpse::AddToWorld()
 {
@@ -78,7 +76,7 @@ bool Corpse::Create(uint32 guidlow, Player* owner)
 
     if (!IsPositionValid())
     {
-        TC_LOG_ERROR(LOG_FILTER_PLAYER, "Corpse (guidlow %d, owner %s) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
+        TC_LOG_ERROR("entities.player", "Corpse (guidlow %d, owner %s) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
             guidlow, owner->GetName().c_str(), owner->GetPositionX(), owner->GetPositionY());
         return false;
     }
@@ -121,7 +119,7 @@ void Corpse::SaveToDB()
     stmt->setUInt32(index++, uint32(m_time));                                         // time
     stmt->setUInt8 (index++, GetType());                                              // corpseType
     stmt->setUInt32(index++, GetInstanceId());                                        // instanceId
-    stmt->setUInt16(index++, GetPhaseMask());                                         // phaseMask
+    stmt->setUInt32(index++, GetPhaseMask());                                         // phaseMask
     trans->Append(stmt);
 
     CharacterDatabase.CommitTransaction(trans);
@@ -134,7 +132,7 @@ void Corpse::DeleteBonesFromWorld()
 
     if (!corpse)
     {
-        TC_LOG_ERROR(LOG_FILTER_PLAYER, "Bones %u not found in world.", GetGUIDLow());
+        TC_LOG_ERROR("entities.player", "Bones %u not found in world.", GetGUIDLow());
         return;
     }
 
@@ -184,7 +182,7 @@ bool Corpse::LoadCorpseFromDB(uint32 guid, Field* fields)
     m_time = time_t(fields[11].GetUInt32());
 
     uint32 instanceId  = fields[13].GetUInt32();
-    uint32 phaseMask   = fields[14].GetUInt16();
+    uint32 phaseMask   = fields[14].GetUInt32();
 
     // place
     SetLocationInstanceId(instanceId);
@@ -194,7 +192,7 @@ bool Corpse::LoadCorpseFromDB(uint32 guid, Field* fields)
 
     if (!IsPositionValid())
     {
-        TC_LOG_ERROR(LOG_FILTER_PLAYER, "Corpse (guid: %u, owner: %u) is not created, given coordinates are not valid (X: %f, Y: %f, Z: %f)",
+        TC_LOG_ERROR("entities.player", "Corpse (guid: %u, owner: %u) is not created, given coordinates are not valid (X: %f, Y: %f, Z: %f)",
             GetGUIDLow(), GUID_LOPART(GetOwnerGUID()), posX, posY, posZ);
         return false;
     }

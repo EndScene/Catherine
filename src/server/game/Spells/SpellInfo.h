@@ -179,7 +179,6 @@ enum SpellCustomAttributes
     SPELL_ATTR0_CU_CONE_LINE                     = 0x00000004,
     SPELL_ATTR0_CU_SHARE_DAMAGE                  = 0x00000008,
     SPELL_ATTR0_CU_NO_INITIAL_THREAT             = 0x00000010,
-    SPELL_ATTR0_CU_NONE2                         = 0x00000020,   // UNUSED
     SPELL_ATTR0_CU_AURA_CC                       = 0x00000040,
     SPELL_ATTR0_CU_DIRECT_DAMAGE                 = 0x00000100,
     SPELL_ATTR0_CU_CHARGE                        = 0x00000200,
@@ -201,7 +200,7 @@ class SpellImplicitTargetInfo
 private:
     Targets _target;
 public:
-    SpellImplicitTargetInfo() : _target(Targets(0)) {}
+    SpellImplicitTargetInfo() : _target(Targets(0)) { }
     SpellImplicitTargetInfo(uint32 target);
 
     bool IsArea() const;
@@ -259,7 +258,10 @@ public:
     float     DeltaScalingMultiplier;
     float     ComboScalingMultiplier;
 
-    SpellEffectInfo() {}
+    SpellEffectInfo() : _spellInfo(NULL), _effIndex(0), Effect(0), ApplyAuraName(0), Amplitude(0), DieSides(0),
+                        RealPointsPerLevel(0), BasePoints(0), PointsPerComboPoint(0), ValueMultiplier(0), DamageMultiplier(0),
+                        BonusMultiplier(0), MiscValue(0), MiscValueB(0), Mechanic(MECHANIC_NONE), RadiusEntry(NULL), ChainTarget(0),
+                        ItemType(0), TriggerSpell(0), ImplicitTargetConditions(NULL) {}
     SpellEffectInfo(SpellEntry const* spellEntry, SpellInfo const* spellInfo, uint8 effIndex, SpellEffectEntry const* effect);
 
     bool IsEffect() const;
@@ -300,7 +302,7 @@ class SpellInfo
 {
 public:
     uint32 Id;
-    uint32 Category;
+    SpellCategoryEntry const* CategoryEntry;
     uint32 Dispel;
     uint32 Mechanic;
     uint32 Attributes;
@@ -420,6 +422,7 @@ public:
     SpellInfo(SpellEntry const* spellEntry, SpellEffectEntry const** effects);
     ~SpellInfo();
 
+    uint32 GetCategory() const;
     bool HasEffect(SpellEffects effect) const;
     bool HasAura(AuraType aura) const;
     bool HasAreaAuraEffect() const;
@@ -437,7 +440,7 @@ public:
     bool IsAffectingArea() const;
     bool IsTargetingArea() const;
     bool NeedsExplicitUnitTarget() const;
-    bool NeedsToBeTriggeredByCaster() const;
+    bool NeedsToBeTriggeredByCaster(SpellInfo const* triggeringSpell) const;
 
     bool IsPassive() const;
     bool IsAutocastable() const;
@@ -445,6 +448,7 @@ public:
     bool IsPassiveStackableWithRanks() const;
     bool IsMultiSlotAura() const;
     bool IsStackableOnOneSlotWithDifferentCasters() const;
+    bool IsCooldownStartedOnEvent() const;
     bool IsDeathPersistent() const;
     bool IsRequiringDeadTarget() const;
     bool IsAllowingDeadTarget() const;
@@ -495,7 +499,7 @@ public:
 
     uint32 GetMaxTicks() const;
 
-    uint32 CalcCastTime(Unit* caster = NULL, Spell* spell = NULL) const;
+    uint32 CalcCastTime(uint8 level = 0, Spell* spell = NULL) const;
     uint32 GetRecoveryTime() const;
 
     int32 CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask) const;
@@ -512,7 +516,7 @@ public:
     bool IsHighRankOf(SpellInfo const* spellInfo) const;
 
     // loading helpers
-    uint32 _GetExplicitTargetMask() const;
+    void _InitializeExplicitTargetMask();
     bool _IsPositiveEffect(uint8 effIndex, bool deep) const;
     bool _IsPositiveSpell() const;
     static bool _IsPositiveTarget(uint32 targetA, uint32 targetB);

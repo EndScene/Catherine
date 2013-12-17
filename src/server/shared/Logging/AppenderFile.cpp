@@ -16,7 +16,10 @@
  */
 
 #include "AppenderFile.h"
-#include "Common.h"
+
+#if PLATFORM == PLATFORM_WINDOWS
+# include <Windows.h>
+#endif
 
 AppenderFile::AppenderFile(uint8 id, std::string const& name, LogLevel level, const char* _filename, const char* _logDir, const char* _mode, AppenderFlags _flags, uint64 fileSize):
     Appender(id, name, APPENDER_FILE, level, _flags),
@@ -28,7 +31,7 @@ AppenderFile::AppenderFile(uint8 id, std::string const& name, LogLevel level, co
     fileSize(0)
 {
     dynamicName = std::string::npos != filename.find("%s");
-    backup = _flags & APPENDER_FLAGS_MAKE_FILE_BACKUP;
+    backup = (_flags & APPENDER_FLAGS_MAKE_FILE_BACKUP) != 0;
 
     logfile = !dynamicName ? OpenFile(_filename, _mode, mode == "w" && backup) : NULL;
 }
@@ -40,7 +43,7 @@ AppenderFile::~AppenderFile()
 
 void AppenderFile::_write(LogMessage const& message)
 {
-    bool exceedMaxSize = maxFileSize > 0 && (fileSize + message.Size()) > maxFileSize;
+    bool exceedMaxSize = maxFileSize > 0 && (fileSize.value() + message.Size()) > maxFileSize;
 
     if (dynamicName)
     {
@@ -56,7 +59,7 @@ void AppenderFile::_write(LogMessage const& message)
 
     fprintf(logfile, "%s%s", message.prefix.c_str(), message.text.c_str());
     fflush(logfile);
-    fileSize += message.Size();
+    fileSize += uint64(message.Size());
 
     if (dynamicName)
         CloseFile();

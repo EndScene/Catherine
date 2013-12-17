@@ -102,26 +102,27 @@ class netherspite_infernal : public CreatureScript
 public:
     netherspite_infernal() : CreatureScript("netherspite_infernal") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new netherspite_infernalAI (creature);
+        return new netherspite_infernalAI(creature);
     }
 
     struct netherspite_infernalAI : public ScriptedAI
     {
         netherspite_infernalAI(Creature* creature) : ScriptedAI(creature),
-            HellfireTimer(0), CleanupTimer(0), malchezaar(0), point(NULL) {}
+            HellfireTimer(0), CleanupTimer(0), malchezaar(0), point(NULL) { }
 
         uint32 HellfireTimer;
         uint32 CleanupTimer;
         uint64 malchezaar;
         InfernalPoint *point;
 
-        void Reset() {}
-        void EnterCombat(Unit* /*who*/) {}
-        void MoveInLineOfSight(Unit* /*who*/) {}
+        void Reset() OVERRIDE { }
+        void EnterCombat(Unit* /*who*/) OVERRIDE { }
+        void MoveInLineOfSight(Unit* /*who*/) OVERRIDE { }
 
-        void UpdateAI(uint32 diff)
+
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (HellfireTimer)
             {
@@ -143,14 +144,14 @@ public:
             }
         }
 
-        void KilledUnit(Unit* who)
+        void KilledUnit(Unit* who) OVERRIDE
         {
             if (Unit* unit = Unit::GetUnit(*me, malchezaar))
                 if (Creature* creature = unit->ToCreature())
                     creature->AI()->KilledUnit(who);
         }
 
-        void SpellHit(Unit* /*who*/, const SpellInfo* spell)
+        void SpellHit(Unit* /*who*/, const SpellInfo* spell) OVERRIDE
         {
             if (spell->Id == SPELL_INFERNAL_RELAY)
             {
@@ -161,7 +162,7 @@ public:
             }
         }
 
-        void DamageTaken(Unit* done_by, uint32 &damage)
+        void DamageTaken(Unit* done_by, uint32 &damage) OVERRIDE
         {
             if (done_by->GetGUID() != malchezaar)
                 damage = 0;
@@ -176,9 +177,9 @@ class boss_malchezaar : public CreatureScript
 public:
     boss_malchezaar() : CreatureScript("boss_malchezaar") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new boss_malchezaarAI (creature);
+        return new boss_malchezaarAI(creature);
     }
 
     struct boss_malchezaarAI : public ScriptedAI
@@ -210,7 +211,7 @@ public:
 
         uint32 phase;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             AxesCleanup();
             ClearWeapons();
@@ -242,12 +243,12 @@ public:
                 instance->HandleGameObject(instance->GetData64(DATA_GO_NETHER_DOOR), true);
         }
 
-        void KilledUnit(Unit* /*victim*/)
+        void KilledUnit(Unit* /*victim*/) OVERRIDE
         {
             Talk(SAY_SLAY);
         }
 
-        void JustDied(Unit* /*killer*/)
+        void JustDied(Unit* /*killer*/) OVERRIDE
         {
             Talk(SAY_DEATH);
 
@@ -263,7 +264,7 @@ public:
                 instance->HandleGameObject(instance->GetData64(DATA_GO_NETHER_DOOR), true);
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* /*who*/) OVERRIDE
         {
             Talk(SAY_AGGRO);
 
@@ -363,30 +364,28 @@ public:
                 me->GetRandomNearPosition(pos, 60);
             else
             {
-                std::vector<InfernalPoint*>::iterator itr = positions.begin()+rand()%positions.size();
-                point = *itr;
-                positions.erase(itr);
-                pos.Relocate(point->x, point->y, INFERNAL_Z);
+                point = Trinity::Containers::SelectRandomContainerElement(positions);
+                pos.Relocate(point->x, point->y, INFERNAL_Z, frand(0.0f, float(M_PI * 2)));
             }
 
-            Creature* Infernal = me->SummonCreature(NETHERSPITE_INFERNAL, pos, TEMPSUMMON_TIMED_DESPAWN, 180000);
+            Creature* infernal = me->SummonCreature(NETHERSPITE_INFERNAL, pos, TEMPSUMMON_TIMED_DESPAWN, 180000);
 
-            if (Infernal)
+            if (infernal)
             {
-                Infernal->SetDisplayId(INFERNAL_MODEL_INVISIBLE);
-                Infernal->setFaction(me->getFaction());
+                infernal->SetDisplayId(INFERNAL_MODEL_INVISIBLE);
+                infernal->setFaction(me->getFaction());
                 if (point)
-                    CAST_AI(netherspite_infernal::netherspite_infernalAI, Infernal->AI())->point=point;
-                CAST_AI(netherspite_infernal::netherspite_infernalAI, Infernal->AI())->malchezaar=me->GetGUID();
+                    CAST_AI(netherspite_infernal::netherspite_infernalAI, infernal->AI())->point=point;
+                CAST_AI(netherspite_infernal::netherspite_infernalAI, infernal->AI())->malchezaar=me->GetGUID();
 
-                infernals.push_back(Infernal->GetGUID());
-                DoCast(Infernal, SPELL_INFERNAL_RELAY);
+                infernals.push_back(infernal->GetGUID());
+                DoCast(infernal, SPELL_INFERNAL_RELAY);
             }
 
             Talk(SAY_SUMMON);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (!UpdateVictim())
                 return;

@@ -56,7 +56,7 @@ void PetAI::_stopAttack()
 {
     if (!me->IsAlive())
     {
-        TC_LOG_DEBUG(LOG_FILTER_GENERAL, "Creature stoped attacking cuz his dead [guid=%u]", me->GetGUIDLow());
+        TC_LOG_DEBUG("misc", "Creature stoped attacking cuz his dead [guid=%u]", me->GetGUIDLow());
         me->GetMotionMaster()->Clear();
         me->GetMotionMaster()->MoveIdle();
         me->CombatStop();
@@ -97,7 +97,7 @@ void PetAI::UpdateAI(uint32 diff)
 
         if (_needToStop())
         {
-            TC_LOG_DEBUG(LOG_FILTER_GENERAL, "Pet AI stopped attacking [guid=%u]", me->GetGUIDLow());
+            TC_LOG_DEBUG("misc", "Pet AI stopped attacking [guid=%u]", me->GetGUIDLow());
             _stopAttack();
             return;
         }
@@ -260,15 +260,15 @@ void PetAI::UpdateAI(uint32 diff)
 
 void PetAI::UpdateAllies()
 {
+    m_updateAlliesTimer = 10 * IN_MILLISECONDS;                 // update friendly targets every 10 seconds, lesser checks increase performance
+
     Unit* owner = me->GetCharmerOrOwner();
-    Group* group = NULL;
-
-    m_updateAlliesTimer = 10*IN_MILLISECONDS;                //update friendly targets every 10 seconds, lesser checks increase performance
-
     if (!owner)
         return;
-    else if (owner->GetTypeId() == TYPEID_PLAYER)
-        group = owner->ToPlayer()->GetGroup();
+
+    Group* group = NULL;
+    if (Player* player = owner->ToPlayer())
+        group = player->GetGroup();
 
     //only pet and owner/not in group->ok
     if (m_AllySet.size() == 2 && !group)
@@ -285,7 +285,7 @@ void PetAI::UpdateAllies()
         for (GroupReference* itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
         {
             Player* Target = itr->GetSource();
-            if (!Target || !group->SameSubGroup((Player*)owner, Target))
+            if (!Target || !group->SameSubGroup(owner->ToPlayer(), Target))
                 continue;
 
             if (Target->GetGUID() == owner->GetGUID())
@@ -409,7 +409,7 @@ Unit* PetAI::SelectNextTarget(bool allowAutoSelect) const
     if (me->HasReactState(REACT_AGGRESSIVE) && allowAutoSelect)
     {
         if (!me->GetCharmInfo()->IsReturning() || me->GetCharmInfo()->IsFollowing() || me->GetCharmInfo()->IsAtStay())
-            if (Unit* nearTarget = me->ToCreature()->SelectNearestHostileUnitInAggroRange(true))
+            if (Unit* nearTarget = me->SelectNearestHostileUnitInAggroRange(true))
                 return nearTarget;
     }
 

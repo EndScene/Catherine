@@ -45,7 +45,7 @@ enum SmartEscortVars
 class SmartAI : public CreatureAI
 {
     public:
-        ~SmartAI(){}
+        ~SmartAI(){ }
         explicit SmartAI(Creature* c);
 
         // Start moving to the desired MovePoint
@@ -56,7 +56,7 @@ class SmartAI : public CreatureAI
         void EndPath(bool fail = false);
         void ResumePath();
         WayPoint* GetNextWayPoint();
-        bool HasEscortState(uint32 uiEscortState) { return (mEscortState & uiEscortState); }
+        bool HasEscortState(uint32 uiEscortState) const { return (mEscortState & uiEscortState) != 0; }
         void AddEscortState(uint32 uiEscortState) { mEscortState |= uiEscortState; }
         void RemoveEscortState(uint32 uiEscortState) { mEscortState &= ~uiEscortState; }
         void SetAutoAttack(bool on) { mCanAutoAttack = on; }
@@ -71,10 +71,7 @@ class SmartAI : public CreatureAI
         // Called when creature is spawned or respawned
         void JustRespawned();
 
-        // Called after InitializeAI(), EnterEvadeMode() for resetting variables
-        void Reset();
-
-        // Called at reaching home after evade
+        // Called at reaching home after evade, InitializeAI(), EnterEvadeMode() for resetting variables
         void JustReachedHome();
 
         // Called for reaction at enter to combat if not in combat yet (enemy can be NULL)
@@ -232,13 +229,14 @@ class SmartAI : public CreatureAI
         uint32 mDespawnState;
         void UpdateDespawn(const uint32 diff);
         uint32 mEscortInvokerCheckTimer;
+        bool mJustReset;
 };
 
 class SmartGameObjectAI : public GameObjectAI
 {
     public:
-        SmartGameObjectAI(GameObject* g) : GameObjectAI(g), go(g) {}
-        ~SmartGameObjectAI() {}
+        SmartGameObjectAI(GameObject* g) : GameObjectAI(g), go(g) { }
+        ~SmartGameObjectAI() { }
 
         void UpdateAI(uint32 diff);
         void InitializeAI();

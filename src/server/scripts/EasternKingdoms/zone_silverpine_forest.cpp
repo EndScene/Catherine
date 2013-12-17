@@ -64,7 +64,7 @@ public:
 
     struct npc_deathstalker_erlandAI : public npc_escortAI
     {
-        npc_deathstalker_erlandAI(Creature* creature) : npc_escortAI(creature) {}
+        npc_deathstalker_erlandAI(Creature* creature) : npc_escortAI(creature) { }
 
         void WaypointReached(uint32 waypointId)
         {
@@ -107,7 +107,7 @@ public:
             }
         }
 
-        void Reset() {}
+        void Reset() OVERRIDE { }
 
         void EnterCombat(Unit* who)
         {
@@ -128,7 +128,7 @@ public:
         return true;
     }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_deathstalker_erlandAI(creature);
     }

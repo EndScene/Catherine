@@ -15,11 +15,15 @@ set(scripts_STAT_SRCS
   Kalimdor/zone_moonglade.cpp
   Kalimdor/RazorfenDowns/razorfen_downs.cpp
   Kalimdor/RazorfenDowns/instance_razorfen_downs.cpp
+  Kalimdor/RazorfenDowns/boss_tuten_kash.cpp
+  Kalimdor/RazorfenDowns/boss_mordresh_fire_eye.cpp
+  Kalimdor/RazorfenDowns/boss_glutton.cpp
   Kalimdor/RazorfenDowns/boss_amnennar_the_coldbringer.cpp
   Kalimdor/RazorfenDowns/razorfen_downs.h
-  Kalimdor/ZulFarrak/zulfarrak.h
   Kalimdor/ZulFarrak/zulfarrak.cpp
   Kalimdor/ZulFarrak/instance_zulfarrak.cpp
+  Kalimdor/ZulFarrak/boss_zum_rah.cpp
+  Kalimdor/ZulFarrak/zulfarrak.h
   Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/boss_epoch_hunter.cpp
   Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/old_hillsbrad.h
   Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/boss_leutenant_drake.cpp
@@ -66,6 +70,7 @@ set(scripts_STAT_SRCS
   Kalimdor/Maraudon/boss_landslide.cpp
   Kalimdor/Maraudon/boss_celebras_the_cursed.cpp
   Kalimdor/Maraudon/boss_noxxion.cpp
+  Kalimdor/Maraudon/instance_maraudon.cpp
   Kalimdor/TempleOfAhnQiraj/boss_fankriss.cpp
   Kalimdor/TempleOfAhnQiraj/boss_huhuran.cpp
   Kalimdor/TempleOfAhnQiraj/instance_temple_of_ahnqiraj.cpp
@@ -111,6 +116,8 @@ set(scripts_STAT_SRCS
   Kalimdor/OnyxiasLair/boss_onyxia.cpp
   Kalimdor/OnyxiasLair/onyxias_lair.h
   Kalimdor/OnyxiasLair/instance_onyxias_lair.cpp
+  Kalimdor/RagefireChasm/instance_ragefire_chasm.cpp
+  Kalimdor/DireMaul/instance_dire_maul.cpp
   Kalimdor/HallsOfOrigination/halls_of_origination.h
   Kalimdor/HallsOfOrigination/instance_halls_of_origination.cpp
   Kalimdor/HallsOfOrigination/boss_temple_guardian_anhuur.cpp

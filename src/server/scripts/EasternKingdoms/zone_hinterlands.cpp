@@ -40,9 +40,9 @@ enum eOOX
 {
     SAY_OOX_START           = 0,
     SAY_OOX_AGGRO           = 1,
-    SAY_OOX_AMBUSH          = 3,
-    SAY_OOX_AMBUSH_REPLY    = 4,
-    SAY_OOX_END             = 5,
+    SAY_OOX_AMBUSH          = 2,
+    SAY_OOX_AMBUSH_REPLY    = 3,
+    SAY_OOX_END             = 4,
 
     QUEST_RESQUE_OOX_09     = 836,
 
@@ -77,7 +77,7 @@ public:
         return true;
     }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_00x09hlAI(creature);
     }
@@ -86,7 +86,7 @@ public:
     {
         npc_00x09hlAI(Creature* creature) : npc_escortAI(creature) { }
 
-        void Reset() { }
+        void Reset() OVERRIDE { }
 
         void WaypointReached(uint32 waypointId)
         {
@@ -139,7 +139,7 @@ public:
             Talk(SAY_OOX_AGGRO);
         }
 
-        void JustSummoned(Creature* summoned)
+        void JustSummoned(Creature* summoned) OVERRIDE
         {
             summoned->GetMotionMaster()->MovePoint(0, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
         }

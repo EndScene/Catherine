@@ -44,7 +44,7 @@ class npc_rathis_tomber : public CreatureScript
 public:
     npc_rathis_tomber() : CreatureScript("npc_rathis_tomber") { }
 
-    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action)
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) OVERRIDE
     {
         player->PlayerTalkClass->ClearMenus();
         if (action == GOSSIP_ACTION_TRADE)
@@ -52,7 +52,7 @@ public:
         return true;
     }
 
-    bool OnGossipHello(Player* player, Creature* creature)
+    bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
     {
         if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
@@ -73,8 +73,9 @@ public:
 ## npc_ranger_lilatha
 ######*/
 
-enum eEnums
+enum RangerLilatha
 {
+    // Yells
     SAY_START                           = 0,
     SAY_PROGRESS1                       = 1,
     SAY_PROGRESS2                       = 2,
@@ -83,9 +84,16 @@ enum eEnums
     SAY_END2                            = 5,
     SAY_CAPTAIN_ANSWER                  = 0,
 
+    // Quests
     QUEST_ESCAPE_FROM_THE_CATACOMBS     = 9212,
+
+    // Gameobjects
     GO_CAGE                             = 181152,
+
+    // Creature
     NPC_CAPTAIN_HELIOS                  = 16220,
+
+    // Factions
     FACTION_SMOON_E                     = 1603
 };
 
@@ -96,9 +104,9 @@ public:
 
     struct npc_ranger_lilathaAI : public npc_escortAI
     {
-        npc_ranger_lilathaAI(Creature* creature) : npc_escortAI(creature) {}
+        npc_ranger_lilathaAI(Creature* creature) : npc_escortAI(creature) { }
 
-        void WaypointReached(uint32 waypointId)
+        void WaypointReached(uint32 waypointId) OVERRIDE
         {
             Player* player = GetPlayerForEscort();
             if (!player)
@@ -117,7 +125,7 @@ public:
                     break;
                 case 11:
                     Talk(SAY_PROGRESS2, player->GetGUID());
-                    me->SetOrientation(4.762841f);
+                    me->SetFacingTo(4.762841f);
                     break;
                 case 18:
                     {
@@ -142,11 +150,11 @@ public:
                     player->GroupEventHappens(QUEST_ESCAPE_FROM_THE_CATACOMBS, me);
                     break;
                 case 32:
-                    me->SetOrientation(2.978281f);
+                    me->SetFacingTo(2.978281f);
                     Talk(SAY_END1, player->GetGUID());
                     break;
                 case 33:
-                    me->SetOrientation(5.858011f);
+                    me->SetFacingTo(5.858011f);
                     Talk(SAY_END2, player->GetGUID());
                     Creature* CaptainHelios = me->FindNearestCreature(NPC_CAPTAIN_HELIOS, 50);
                     if (CaptainHelios)
@@ -155,14 +163,14 @@ public:
             }
         }
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             if (GameObject* Cage = me->FindNearestGameObject(GO_CAGE, 20))
                 Cage->SetGoState(GO_STATE_READY);
         }
     };
 
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest)
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest) OVERRIDE
     {
         if (quest->GetQuestId() == QUEST_ESCAPE_FROM_THE_CATACOMBS)
         {
@@ -174,7 +182,7 @@ public:
         return true;
     }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_ranger_lilathaAI(creature);
     }

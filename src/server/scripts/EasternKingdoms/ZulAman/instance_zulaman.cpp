@@ -44,13 +44,13 @@ class instance_zulaman : public InstanceMapScript
                 ZulAmanBossCount        = 0;
             }
 
-            void FillInitialWorldStates(WorldPacket& packet)
+            void FillInitialWorldStates(WorldPacket& packet) OVERRIDE
             {
                 packet << uint32(WORLD_STATE_ZULAMAN_TIMER_ENABLED) << uint32(ZulAmanState ? 1 : 0);
                 packet << uint32(WORLD_STATE_ZULAMAN_TIMER) << uint32(SpeedRunTimer);
             }
 
-            void OnCreatureCreate(Creature* creature)
+            void OnCreatureCreate(Creature* creature) OVERRIDE
             {
                 switch (creature->GetEntry())
                 {
@@ -83,7 +83,7 @@ class instance_zulaman : public InstanceMapScript
                 }
             }
 
-            void OnGameObjectCreate(GameObject* go)
+            void OnGameObjectCreate(GameObject* go) OVERRIDE
             {
                 switch (go->GetEntry())
                 {
@@ -101,7 +101,7 @@ class instance_zulaman : public InstanceMapScript
                 }
             }
 
-            void OnGameObjectRemove(GameObject* go)
+            void OnGameObjectRemove(GameObject* go) OVERRIDE
             {
                 switch (go->GetEntry())
                 {
@@ -113,7 +113,7 @@ class instance_zulaman : public InstanceMapScript
                 }
             }
 
-            uint64 GetData64(uint32 type) const
+            uint64 GetData64(uint32 type) const OVERRIDE
             {
                 switch (type)
                 {
@@ -142,7 +142,7 @@ class instance_zulaman : public InstanceMapScript
                 return 0;
             }
 
-            void SetData(uint32 type, uint32 data)
+            void SetData(uint32 type, uint32 data) OVERRIDE
             {
                 switch (type)
                 {
@@ -164,7 +164,7 @@ class instance_zulaman : public InstanceMapScript
                 }
             }
 
-            uint32 GetData(uint32 type) const
+            uint32 GetData(uint32 type) const OVERRIDE
             {
                 switch (type)
                 {
@@ -177,7 +177,7 @@ class instance_zulaman : public InstanceMapScript
                 return 0;
             }
 
-            bool SetBossState(uint32 type, EncounterState state)
+            bool SetBossState(uint32 type, EncounterState state) OVERRIDE
             {
                 if (!InstanceScript::SetBossState(type, state))
                     return false;
@@ -221,7 +221,7 @@ class instance_zulaman : public InstanceMapScript
                 return true;
             }
 
-            void ProcessEvent(WorldObject* /*obj*/, uint32 eventId)
+            void ProcessEvent(WorldObject* /*obj*/, uint32 eventId) OVERRIDE
             {
                 switch (eventId)
                 {
@@ -266,7 +266,7 @@ class instance_zulaman : public InstanceMapScript
                 }
             }
 
-            std::string GetSaveData()
+            std::string GetSaveData() OVERRIDE
             {
                 OUT_SAVE_INST_DATA;
 
@@ -278,7 +278,7 @@ class instance_zulaman : public InstanceMapScript
                 return saveStream.str();
             }
 
-            void Load(char const* str)
+            void Load(char const* str) OVERRIDE
             {
                 if (!str)
                 {
@@ -339,7 +339,7 @@ class instance_zulaman : public InstanceMapScript
             uint32 ZulAmanBossCount;
         };
 
-        InstanceScript* GetInstanceScript(InstanceMap* map) const
+        InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
         {
             return new instance_zulaman_InstanceScript(map);
         }
