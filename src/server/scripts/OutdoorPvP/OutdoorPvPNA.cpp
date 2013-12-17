@@ -215,8 +215,6 @@ bool OutdoorPvPNA::SetupOutdoorPvP()
 
     // halaa
     m_obj = new OPvPCapturePointNA(this);
-    if (!m_obj)
-        return false;
 
     AddCapturePoint(m_obj);
     return true;
@@ -669,7 +667,7 @@ class OutdoorPvP_nagrand : public OutdoorPvPScript
         {
         }
 
-        OutdoorPvP* GetOutdoorPvP() const
+        OutdoorPvP* GetOutdoorPvP() const OVERRIDE
         {
             return new OutdoorPvPNA();
         }

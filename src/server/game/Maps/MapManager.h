@@ -107,15 +107,6 @@ class MapManager
 
         void DoDelayedMovesAndRemoves();
 
-        void LoadTransports();
-        void LoadTransportNPCs();
-
-        typedef std::set<Transport*> TransportSet;
-        TransportSet m_Transports;
-
-        typedef std::map<uint32, TransportSet> TransportMap;
-        TransportMap m_TransportsByMap;
-
         bool CanPlayerEnter(uint32 mapid, Player* player, bool loginCheck = false);
         void InitializeVisibilityDistanceInfo();
 
@@ -137,11 +128,6 @@ class MapManager
     private:
         typedef UNORDERED_MAP<uint32, Map*> MapMapType;
         typedef std::vector<bool> InstanceIds;
-
-        // debugging code, should be deleted some day
-        void checkAndCorrectGridStatesArray();              // just for debugging to find some memory overwrites
-        GridState* i_GridStates[MAX_GRID_STATE];            // shadow entries to the global array in Map.cpp
-        int i_GridStateErrorCount;
 
         MapManager();
         ~MapManager();

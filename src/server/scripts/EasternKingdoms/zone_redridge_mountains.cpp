@@ -26,7 +26,7 @@ Script Data End */
 #include "ScriptedEscortAI.h"
 #include "Player.h"
 
-enum eCorporalKeeshan
+enum CorporalKeeshan
 {
     QUEST_MISSING_IN_ACTION = 219,
 
@@ -45,7 +45,7 @@ class npc_corporal_keeshan : public CreatureScript
 public:
     npc_corporal_keeshan() : CreatureScript("npc_corporal_keeshan") { }
 
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest)
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest) OVERRIDE
     {
         if (quest->GetQuestId() == QUEST_MISSING_IN_ACTION)
         {
@@ -56,21 +56,21 @@ public:
         return false;
     }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
         return new npc_corporal_keeshanAI(creature);
     }
 
     struct npc_corporal_keeshanAI : public npc_escortAI
     {
-        npc_corporal_keeshanAI(Creature* creature) : npc_escortAI(creature) {}
+        npc_corporal_keeshanAI(Creature* creature) : npc_escortAI(creature) { }
 
         uint32 uiPhase;
         uint32 uiTimer;
         uint32 uiMockingBlowTimer;
         uint32 uiShieldBashTimer;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             uiTimer = 0;
             uiPhase = 0;
@@ -78,7 +78,7 @@ public:
             uiShieldBashTimer  = 8000;
         }
 
-        void WaypointReached(uint32 waypointId)
+        void WaypointReached(uint32 waypointId) OVERRIDE
         {
             Player* player = GetPlayerForEscort();
             if (!player)
@@ -105,7 +105,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 uiDiff)
+        void UpdateAI(uint32 uiDiff) OVERRIDE
         {
             if (HasEscortState(STATE_ESCORT_NONE))
                 return;
@@ -139,10 +139,12 @@ public:
                             Talk(SAY_CORPORAL_4);
                             uiTimer = 2500;
                             uiPhase = 5;
+                            break;
                         case 5:
                             Talk(SAY_CORPORAL_5);
                             uiTimer = 0;
                             uiPhase = 0;
+                            break;
                     }
                 } else uiTimer -= uiDiff;
             }

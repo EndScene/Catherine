@@ -39,20 +39,20 @@ class npc_valkyr_battle_maiden : public CreatureScript
 public:
     npc_valkyr_battle_maiden() : CreatureScript("npc_valkyr_battle_maiden") { }
 
-    CreatureAI* GetAI(Creature* creature) const
+    CreatureAI* GetAI(Creature* creature) const OVERRIDE
     {
-        return new npc_valkyr_battle_maidenAI (creature);
+        return new npc_valkyr_battle_maidenAI(creature);
     }
 
     struct npc_valkyr_battle_maidenAI : public PassiveAI
     {
-        npc_valkyr_battle_maidenAI(Creature* creature) : PassiveAI(creature) {}
+        npc_valkyr_battle_maidenAI(Creature* creature) : PassiveAI(creature) { }
 
         uint32 FlyBackTimer;
         float x, y, z;
         uint32 phase;
 
-        void Reset()
+        void Reset() OVERRIDE
         {
             me->setActive(true);
             me->SetVisible(false);
@@ -69,7 +69,7 @@ public:
             me->SetPosition(x, y, z, 0.0f);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff) OVERRIDE
         {
             if (FlyBackTimer <= diff)
             {

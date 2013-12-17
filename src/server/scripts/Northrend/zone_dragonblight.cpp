@@ -37,10 +37,13 @@ EndContentData */
 #include "CombatAI.h"
 #include "Player.h"
 
-enum eEnums
+enum AlexstraszaWrGate
 {
+    // Quest
     QUEST_RETURN_TO_AG_A    = 12499,
     QUEST_RETURN_TO_AG_H    = 12500,
+
+    // Movie
     MOVIE_ID_GATES          = 14
 };
 
@@ -51,7 +54,7 @@ class npc_alexstrasza_wr_gate : public CreatureScript
 public:
     npc_alexstrasza_wr_gate() : CreatureScript("npc_alexstrasza_wr_gate") { }
 
-    bool OnGossipHello(Player* player, Creature* creature)
+    bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
     {
         if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
@@ -63,7 +66,7 @@ public:
         return true;
     }
 
-    bool OnGossipSelect(Player* player, Creature* /*creature*/, uint32 /*sender*/, uint32 action)
+    bool OnGossipSelect(Player* player, Creature* /*creature*/, uint32 /*sender*/, uint32 action) OVERRIDE
     {
         player->PlayerTalkClass->ClearMenus();
         if (action == GOSSIP_ACTION_INFO_DEF+1)
@@ -129,13 +132,13 @@ public:
             }
         }
 
-        void Register()
+        void Register() OVERRIDE
         {
             OnEffectHitTarget += SpellEffectFn(spell_q12096_q12092_dummy_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
         }
     };
 
-    SpellScript* GetSpellScript() const
+    SpellScript* GetSpellScript() const OVERRIDE
     {
         return new spell_q12096_q12092_dummy_SpellScript();
     }
@@ -161,13 +164,13 @@ public:
             lothalor->DespawnOrUnsummon(4000);
         }
 
-        void Register()
+        void Register() OVERRIDE
         {
             OnEffectHitTarget += SpellEffectFn(spell_q12096_q12092_bark_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
         }
     };
 
-    SpellScript* GetSpellScript() const
+    SpellScript* GetSpellScript() const OVERRIDE
     {
         return new spell_q12096_q12092_bark_SpellScript();
     }
@@ -204,7 +207,7 @@ class npc_wyrmrest_defender : public CreatureScript
     public:
         npc_wyrmrest_defender() : CreatureScript("npc_wyrmrest_defender") { }
 
-        bool OnGossipHello(Player* player, Creature* creature)
+        bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
         {
             if (player->GetQuestStatus(QUEST_DEFENDING_WYRMREST_TEMPLE) == QUEST_STATUS_INCOMPLETE)
             {
@@ -217,7 +220,7 @@ class npc_wyrmrest_defender : public CreatureScript
             return true;
         }
 
-        bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action)
+        bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) OVERRIDE
         {
             player->PlayerTalkClass->ClearMenus();
             if (action == GOSSIP_ACTION_INFO_DEF+1)
@@ -240,7 +243,7 @@ class npc_wyrmrest_defender : public CreatureScript
 
             uint32 RenewRecoveryChecker;
 
-            void Reset()
+            void Reset() OVERRIDE
             {
                 hpWarningReady = true;
                 renewRecoveryCanCheck = false;
@@ -248,7 +251,7 @@ class npc_wyrmrest_defender : public CreatureScript
                 RenewRecoveryChecker = 0;
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(uint32 diff) OVERRIDE
             {
                 // Check system for Health Warning should happen first time whenever get under 30%,
                 // after it should be able to happen only after recovery of last renew is fully done (20 sec),
@@ -270,7 +273,7 @@ class npc_wyrmrest_defender : public CreatureScript
                 }
             }
 
-            void SpellHit(Unit* /*caster*/, SpellInfo const* spell)
+            void SpellHit(Unit* /*caster*/, SpellInfo const* spell) OVERRIDE
             {
                 switch (spell->Id)
                 {
@@ -294,9 +297,109 @@ class npc_wyrmrest_defender : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const
+        CreatureAI* GetAI(Creature* creature) const OVERRIDE
         {
             return new npc_wyrmrest_defenderAI(creature);
+        }
+};
+
+/*#####
+# npc_torturer_lecraft
+#####*/
+
+enum TorturerLeCraft
+{
+    SPELL_HEMORRHAGE                   = 30478,
+    SPELL_KIDNEY_SHOT                  = 30621,
+    SPELL_HIGH_EXECUTORS_BRANDING_IRON = 48603,
+    NPC_TORTURER_LECRAFT               = 27394,
+    EVENT_HEMORRHAGE                   = 1,
+    EVENT_KIDNEY_SHOT                  = 2,
+    SAY_AGGRO                          = 0
+};
+
+class npc_torturer_lecraft : public CreatureScript
+{
+    public: npc_torturer_lecraft() : CreatureScript("npc_torturer_lecraft") {}
+
+        struct npc_torturer_lecraftAI : public ScriptedAI
+        {
+            npc_torturer_lecraftAI(Creature* creature) : ScriptedAI(creature) { }
+
+            void Reset() OVERRIDE
+            {
+                _textCounter = 1;
+                _playerGUID  = 0;
+            }
+
+            void EnterCombat(Unit* who) OVERRIDE
+            {
+                _events.ScheduleEvent(EVENT_HEMORRHAGE, urand(5000, 8000));
+                _events.ScheduleEvent(EVENT_KIDNEY_SHOT, urand(12000, 15000));
+
+                if (Player* player = who->ToPlayer())
+                    Talk (SAY_AGGRO, player->GetGUID());
+            }
+
+            void SpellHit(Unit* caster, const SpellInfo* spell) OVERRIDE
+            {
+                if (spell->Id != SPELL_HIGH_EXECUTORS_BRANDING_IRON)
+                    return;
+
+                if (Player* player = caster->ToPlayer())
+                {
+                    if (_textCounter == 1)
+                        _playerGUID = player->GetGUID();
+
+                    if (_playerGUID != player->GetGUID())
+                        return;
+
+                    Talk(_textCounter, player->GetGUID());
+
+                    if (_textCounter == 5)
+                        player->KilledMonsterCredit(NPC_TORTURER_LECRAFT, 0);
+
+                    ++_textCounter;
+
+                    if (_textCounter == 13)
+                        _textCounter = 6;
+                }
+            }
+
+            void UpdateAI(uint32 diff) OVERRIDE
+            {
+               if (!UpdateVictim())
+                   return;
+
+               _events.Update(diff);
+
+                while (uint32 eventId = _events.ExecuteEvent())
+                {
+                    switch (eventId)
+                    {
+                        case EVENT_HEMORRHAGE:
+                            DoCastVictim(SPELL_HEMORRHAGE);
+                            _events.ScheduleEvent(EVENT_HEMORRHAGE, urand(12000, 168000));
+                            break;
+                        case EVENT_KIDNEY_SHOT:
+                            DoCastVictim(SPELL_KIDNEY_SHOT);
+                            _events.ScheduleEvent(EVENT_KIDNEY_SHOT, urand(20000, 26000));
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                DoMeleeAttackIfReady();
+            }
+            private:
+                EventMap _events;
+                uint8    _textCounter;
+                uint64   _playerGUID;
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new npc_torturer_lecraftAI(creature);
         }
 };
 
@@ -306,4 +409,5 @@ void AddSC_dragonblight()
     new spell_q12096_q12092_dummy;
     new spell_q12096_q12092_bark;
     new npc_wyrmrest_defender;
+    new npc_torturer_lecraft;
 }

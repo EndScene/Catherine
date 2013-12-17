@@ -66,23 +66,23 @@ enum Events
 
 class boss_hakkar : public CreatureScript
 {
-    public: boss_hakkar() : CreatureScript("boss_hakkar") {}
+    public: boss_hakkar() : CreatureScript("boss_hakkar") { }
 
         struct boss_hakkarAI : public BossAI
         {
-            boss_hakkarAI(Creature* creature) : BossAI(creature, DATA_HAKKAR) {}
+            boss_hakkarAI(Creature* creature) : BossAI(creature, DATA_HAKKAR) { }
 
-            void Reset()
+            void Reset() OVERRIDE
             {
                 _Reset();
             }
 
-            void JustDied(Unit* /*killer*/)
+            void JustDied(Unit* /*killer*/) OVERRIDE
             {
                 _JustDied();
             }
 
-            void EnterCombat(Unit* /*who*/)
+            void EnterCombat(Unit* /*who*/) OVERRIDE
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_BLOOD_SIPHON, 90000);
@@ -103,7 +103,7 @@ class boss_hakkar : public CreatureScript
                 Talk(SAY_AGGRO);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(uint32 diff) OVERRIDE
             {
                 if (!UpdateVictim())
                     return;
@@ -167,7 +167,7 @@ class boss_hakkar : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const
+        CreatureAI* GetAI(Creature* creature) const OVERRIDE
         {
             return new boss_hakkarAI(creature);
         }
